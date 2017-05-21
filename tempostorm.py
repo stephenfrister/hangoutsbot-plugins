@@ -72,7 +72,7 @@ def _tempo_check(bot):
 def tempo(bot, event, *args):
     """
     Returns meta information from https://tempostorm.com/
-    Usage: /h tempo <command>
+    \nUsage: /h tempo <command>
     \nCommand Options: link, tall, <tier>, data, video, subscribe, unsubscribe
     \nAdmin Options: update, cleanup
     \nTier Options: t1, t2, t3, t4, t5

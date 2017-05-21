@@ -72,7 +72,6 @@ def _reaper_check(bot):
                     if(rep_num > last_report):
                         yield from _set_reaper_latest(bot, rep_num)
                         
-                        
             new_report = _get_reaper_latest(bot)
             subs = _get_reaper_subscriptions(bot)
             
@@ -83,9 +82,6 @@ def _reaper_check(bot):
                 #heartbeat
                 #yield from bot.coro_send_message(conv_id, messageTime)
                 if new_report != old_report:
-                    #update data
-                    print("new_report != old_report")
-                    #yield from _reaper_update_data(bot)
                     #post link to chat       
                     if new_report != 0:
                         messageNew = "New Syndicate Reaper Report found: "
@@ -99,11 +95,9 @@ def _reaper_check(bot):
 def reaper(bot, event, *args):
     """
     Returns meta information from http://www.vicioussyndicate.com/
-    Usage: /h reaper <command>
+    \nUsage: /h reaper <command>
     \nCommand Options: data, link, distribution, frequency, winrates, subscribe, unsubscribe
     \nAdmin Options: update, cleanup
-    \nUnwritten Options: 
-    
     """
     
     messageInvalid = "Invalid Option. "
@@ -283,6 +277,13 @@ def reaper(bot, event, *args):
                 messageNope = "Nope."
                 yield from bot.coro_send_message(event.conv_id, messageNope)
         
+            #help
+            messageHelp = "Returns meta information from http://www.vicioussyndicate.com/ \n "
+            messageHelp += "Usage: /h reaper <command> \n "
+            messageHelp += "Command Options: data, link, distribution, frequency, winrates, subscribe, unsubscribe \n "
+            messageHelp += "Admin Options: update, cleanup"
+            yield from bot.coro_send_message(event.conv_id, messageHelp)
+
         else: 
             #print("Invalid")
             print( messageInvalid )
@@ -311,7 +312,17 @@ def _print_image(bot, event, image):
     image_data = io.BytesIO(raw)
     image_id = yield from bot._client.upload_image(image_data, filename=filename)
     
-    yield from bot.coro_send_message(event.conv.id_, "Reqested Data.", context, image_id=image_id) 
+    
+    url_split = image.split("/")
+    split_len = len(url_split)
+    image_name = ""
+    if split_len > 0:
+        image_name = url_split[split_len-1]
+    else: 
+        image_name = "Reqested Data."
+    
+    
+    yield from bot.coro_send_message(event.conv.id_, image_name, context, image_id=image_id) 
     
     return ""
     
