@@ -62,6 +62,7 @@ def _tempo_check(bot):
                 #post link to chat       
                 if new_date != "Empty":
                     messageNew = "New Tempostorm meta-snapshot found: "
+                    url = "https://tempostorm.com/hearthstone/meta-snapshot/standard/"
                     url += new_date
                     yield from bot.coro_send_message(conv_id, messageNew)
                     yield from bot.coro_send_message(conv_id, url)

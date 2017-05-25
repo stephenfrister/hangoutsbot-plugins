@@ -85,6 +85,7 @@ def _reaper_check(bot):
                     #post link to chat       
                     if new_report != 0:
                         messageNew = "New Syndicate Reaper Report found: "
+                        report_url = "http://www.vicioussyndicate.com/vs-data-reaper-report-"
                         report_url += str(new_report)
                         yield from bot.coro_send_message(conv_id, messageNew)
                         yield from bot.coro_send_message(conv_id, report_url)
