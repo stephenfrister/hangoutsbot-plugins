@@ -7,6 +7,8 @@ import requests
 import re
 import time
 
+import hangups
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 from commands import command
@@ -31,7 +33,42 @@ globalMemoryHearth = "_global_memory_hearth"
 
 
 def _initialise(bot):
+    #plugins.register_user_command(["card", "test"])
     plugins.register_user_command(["card"])
+    plugins.register_handler(_handle_dot_events, type="message")
+    
+    
+def _handle_dot_events(bot, event, command):
+    
+    """Handle keywords in messages"""
+
+    if isinstance(event.conv_event, hangups.ChatMessageEvent):
+        event_type = "MESSAGE"
+        
+        #print("message") 
+        if _words_in_text(".card", event.text):
+            cardargs = event.text.split(".card")
+            #print(".card len[0]: " + cardargs[0]) 
+            #print(".card len[1]: " + cardargs[1]) 
+            
+            yield from card(bot, event, cardargs[1].strip() )
+    
+    #end _handle_dot_events
+        
+
+def _words_in_text(word, text):
+    """Return True if word is in text"""
+
+    if word.startswith("regex:"):
+        word = word[6:]
+    else:
+        word = re.escape(word)
+
+    regexword = "(?<!\w)" + word + "(?!\w)"
+
+    return True if re.search(regexword, text, re.IGNORECASE) else False
+    
+    #end _words_in_text
     
     
 @command.register(admin=True)
@@ -49,6 +86,8 @@ def setapikey(bot, event, *args):
         messageUsage = "Usage: /h setapikey <key>"
         yield from bot.coro_send_message(event.conv_id, messageUsage)
     print("echoid")
+    
+    #end setapikey
 
 
 def card(bot, event, *args):

@@ -36,8 +36,8 @@ def _tempo_check(bot):
     while True:
         
         #yield from asyncio.sleep(60)
-        #yield from asyncio.sleep(10000) # 167 minutes (2.77 hours)
-        yield from asyncio.sleep(20000) # 334 minutes (5.54 hours)
+        yield from asyncio.sleep(10000) # 167 minutes (2.77 hours)
+        #yield from asyncio.sleep(20000) # 334 minutes (5.54 hours)
         
         messageTime = datetime.now().strftime('%H:%M')
         print("_tempo_check started: " + messageTime)
@@ -53,12 +53,11 @@ def _tempo_check(bot):
         if subs == "Empty":
             subs = []
             
-        for conv_id in subs:
-            #heartbeat
-            #yield from bot.coro_send_message(conv_id, messageTime)
-            if new_date != old_date:
-                #update data
-                yield from _tempo_update_data(bot)
+        if new_date != old_date:
+            #update data
+            yield from _tempo_update_data(bot)        
+                         
+            for conv_id in subs:
                 #post link to chat       
                 if new_date != "Empty":
                     messageNew = "New Tempostorm meta-snapshot found: "
@@ -66,6 +65,16 @@ def _tempo_check(bot):
                     url += new_date
                     yield from bot.coro_send_message(conv_id, messageNew)
                     yield from bot.coro_send_message(conv_id, url)
+                    
+        messageTime = datetime.now().strftime('%H:%M')
+        print("_tempo_check sleep started: " + messageTime)
+        
+        #yield from asyncio.sleep(60)
+        yield from asyncio.sleep(10000) # 167 minutes (2.77 hours)
+        #yield from asyncio.sleep(20000) # 334 minutes (5.54 hours)
+        
+        messageTime = datetime.now().strftime('%H:%M')
+        print("_tempo_check sleep ended: " + messageTime)
                     
     #end _tempo_check
 
@@ -76,14 +85,14 @@ def tempo(bot, event, *args):
     \nUsage: /h tempo <command>
     \nCommand Options: link, tall, <tier>, data, video, subscribe, unsubscribe
     \nAdmin Options: update, cleanup
-    \nTier Options: t1, t2, t3, t4, t5
+    \nTier Options: tS, t1, t2, t3, t4, t5
     """
     messageTier = "Tier Selected: "
     messageInvalid = "Invalid Option. "
-    messageUsage = "Usage: /h tempo <command> \n Command Options: link, tall, <tier>, data, video \n Admin Options: update, cleanup \n Tier Options: t1, t2, t3, t4, t5"
+    messageUsage = "Usage: /h tempo <command> \n Command Options: link, tall, <tier>, data, video \n Admin Options: update, cleanup \n Tier Options: tS, t1, t2, t3, t4, t5"
     
-    ts = ['t1', 't2', 't3', 't4', 't5']
-    tiers = ['tier1', 'tier2', 'tier3', 'tier4', 'tier5']
+    ts = ['tS', 't1', 't2', 't3', 't4', 't5']
+    tiers = ['tierS', 'tier1', 'tier2', 'tier3', 'tier4', 'tier5']
     
     if len(args) > 0:
         
@@ -143,6 +152,7 @@ def tempo(bot, event, *args):
             messageTiers = "All Tiers:"
             yield from bot.coro_send_message(event.conv_id, messageTiers)
             
+            yield from _get_tempo_tier_info(bot, event, 'tS')
             yield from _get_tempo_tier_info(bot, event, 't1')
             yield from _get_tempo_tier_info(bot, event, 't2')
             yield from _get_tempo_tier_info(bot, event, 't3')
@@ -207,6 +217,7 @@ def tempo(bot, event, *args):
             #tall
             messageTall = "All Tiers:"
             yield from bot.coro_send_message(event.conv_id, messageTall)
+            yield from _get_tempo_tier_info(bot, event, 'tS')
             yield from _get_tempo_tier_info(bot, event, 't1')
             yield from _get_tempo_tier_info(bot, event, 't2')
             yield from _get_tempo_tier_info(bot, event, 't3')
@@ -218,7 +229,7 @@ def tempo(bot, event, *args):
             messageHelp += "Usage: /h tempo <command> \n "
             messageHelp += "Command Options: link, tall, <tier>, data, video, subscribe, unsub \n "
             messageHelp += "Admin Options: update, cleanup \n "
-            messageHelp += "Tier Options: t1, t2, t3, t4, t5"
+            messageHelp += "Tier Options: tS, t1, t2, t3, t4, t5"
             yield from bot.coro_send_message(event.conv_id, messageHelp)
             
             return ""
@@ -239,13 +250,13 @@ def tempo(bot, event, *args):
 def _tempo_cleanup(bot):
     bot.memory.pop_by_path(["conv_data", globalMemoryTempo])
     bot.conversation_memory_set(globalMemoryTempo, 'cleanup', "complete")
-    
+
 def _get_tempo_latest(bot):
     if bot.memory.exists(["conv_data", globalMemoryTempo, 'latest']):
         return bot.conversation_memory_get(globalMemoryTempo, 'latest')
     else: 
         return "Empty"
-        
+
 def _get_tempo_date_checked(bot):
     if bot.memory.exists(["conv_data", globalMemoryTempo, 'latest_date_checked']):
         return bot.conversation_memory_get(globalMemoryTempo, 'latest_date_checked')
@@ -257,13 +268,13 @@ def _get_tempo_time_checked(bot):
         return bot.conversation_memory_get(globalMemoryTempo, 'latest_time_checked')
     else: 
         return "Unknown"
-        
+
 def _get_tempo_video(bot):
     if bot.memory.exists(["conv_data", globalMemoryTempo, 'video']):
         return bot.conversation_memory_get(globalMemoryTempo, 'video')
     else: 
         return "Empty"
-                
+
 def _get_tempo_subscriptions(bot):
     if bot.memory.exists(["conv_data", globalMemoryTempo, 'subscriptions']):
         return bot.conversation_memory_get(globalMemoryTempo, 'subscriptions')
@@ -325,6 +336,10 @@ def _set_tempo_new_date(bot):
         time.sleep(3)
     redirected_url = driver.current_url
     
+    messageTime = datetime.now().strftime('%H:%M')
+    print("_set_tempo_new_date about to driver.quit(): " + messageTime)
+    driver.quit()
+    
     # parse the url, get the date, and save it
     url_date = redirected_url.split("/")
     url_len = len(url_date)-1
@@ -336,11 +351,13 @@ def _set_tempo_new_date(bot):
     
     yield from _set_tempo_latest(bot, url_end)
     
-    driver.quit()
+    #end _set_tempo_new_date
+    
     
 @asyncio.coroutine
 def _get_tempo_tier_info(bot, event, param):
     
+    tS = bot.conversation_memory_get(globalMemoryTempo, 'decks_tS')
     t1 = bot.conversation_memory_get(globalMemoryTempo, 'decks_t1')
     t2 = bot.conversation_memory_get(globalMemoryTempo, 'decks_t2')
     t3 = bot.conversation_memory_get(globalMemoryTempo, 'decks_t3')
@@ -349,7 +366,27 @@ def _get_tempo_tier_info(bot, event, param):
     
     decks = bot.conversation_memory_get(globalMemoryTempo, 'decks')
             
-    if param == 't1' or param == 'tier1':
+    if param == 'tS' or param == 'tierS':
+        
+        if bot.memory.exists(["conv_data", globalMemoryTempo, 'decks_tS']):
+            
+            countTier = bot.conversation_memory_get(globalMemoryTempo, 'decks_tS')
+            
+            message = "Tier S:"
+            
+            start = 0
+            end = int(countTier) 
+            x = 0
+            for x in range(start, end):
+                message += "\n" + decks[x] 
+                x += 1
+            
+            yield from bot.coro_send_message(event.conv_id, message)
+            
+        else: 
+            yield from bot.coro_send_message(event.conv_id, "Empty")
+            
+    elif param == 't1' or param == 'tier1':
         
         if bot.memory.exists(["conv_data", globalMemoryTempo, 'decks_t1']):
             
@@ -374,8 +411,6 @@ def _get_tempo_tier_info(bot, event, param):
             
             countTier = bot.conversation_memory_get(globalMemoryTempo, 'decks_t2')
             
-            t1 = bot.conversation_memory_get(globalMemoryTempo, 'decks_t1')
-            
             message = "Tier 2: "
             
             start = int(t1)
@@ -397,7 +432,7 @@ def _get_tempo_tier_info(bot, event, param):
             
             message = "Tier 3: "
             
-            start = int(t1) + int(t2)
+            start = int(tS) + int(t1) + int(t2)
             end = start + int(countTier) 
             x = 0
             for x in range(start, end):
@@ -416,7 +451,7 @@ def _get_tempo_tier_info(bot, event, param):
             
             message = "Tier 4: "
             
-            start = int(t1) + int(t2) + int(t3)
+            start = int(tS) + int(t1) + int(t2) + int(t3)
             end = start + int(countTier) 
             x = 0
             for x in range(start, end):
@@ -435,7 +470,7 @@ def _get_tempo_tier_info(bot, event, param):
             
             message = "Tier 5:"
             
-            start = int(t1) + int(t2) + int(t3) + int(t4)
+            start = int(tS) + int(t1) + int(t2) + int(t3) + int(t4)
             end = start + int(countTier) 
             x = 0
             for x in range(start, end):
@@ -448,6 +483,7 @@ def _get_tempo_tier_info(bot, event, param):
             yield from bot.coro_send_message(event.conv_id, "Empty")
     
     #end _get_tempo_tier_info
+    
     
 @asyncio.coroutine
 def _tempo_update_data(bot):
@@ -463,59 +499,75 @@ def _tempo_update_data(bot):
     driver.get(url)
     
     #wait = WebDriverWait(driver, 10)
-    wait = WebDriverWait(driver, 120)
+    #wait = WebDriverWait(driver, 120)
+    wait = WebDriverWait(driver, 240)
     
     # wait for the page to load
-    wait.until(
-        EC.presence_of_element_located((By.XPATH, "//div[@class = 'tiers m-b-md']"))
-    )
-    
-    element = driver.find_element_by_xpath("//div[@class='tiers m-b-md']")
-    outerhtml = element.get_attribute("outerHTML")
-    soup = BeautifulSoup(outerhtml, "lxml")
-    
-    h4 = soup.find_all('h4')
-        
-    tier1 = soup.find('div',{'id': 'tier1'})
-    tier2 = soup.find('div',{'id': 'tier2'})
-    tier3 = soup.find('div',{'id': 'tier3'})
-    tier4 = soup.find('div',{'id': 'tier4'})
-    tier5 = soup.find('div',{'id': 'tier5'})
-    
-    t1h4 = tier1.find_all('h4')
-    t2h4 = tier2.find_all('h4')
-    t3h4 = tier3.find_all('h4')
-    t4h4 = tier4.find_all('h4')
-    t5h4 = tier5.find_all('h4')
-          
-    allDecks = []
-    
-    i = 1
-    for deck in h4:
-        allDecks.append(str(i) + ": " + deck.text)
-        i += 1
-    
-    bot.conversation_memory_set(globalMemoryTempo, 'decks', allDecks)
-    bot.conversation_memory_set(globalMemoryTempo, 'decks_all', str(len(h4)))
-    bot.conversation_memory_set(globalMemoryTempo, 'decks_t1', str(len(t1h4)))
-    bot.conversation_memory_set(globalMemoryTempo, 'decks_t2', str(len(t2h4)))
-    bot.conversation_memory_set(globalMemoryTempo, 'decks_t3', str(len(t3h4)))
-    bot.conversation_memory_set(globalMemoryTempo, 'decks_t4', str(len(t4h4)))
-    bot.conversation_memory_set(globalMemoryTempo, 'decks_t5', str(len(t5h4)))
+    try: 
+        wait.until(
+            EC.presence_of_element_located((By.ID, "tier1"))
+        )
+            #EC.presence_of_element_located((By.XPATH, "//div[@class='tiers m-b-md']"))
+            #EC.presence_of_element_located((By.XPATH, "//div[@class='tiers m-b-md pos-rel']"))
 
-    element = driver.find_element_by_xpath("//div[@class='m-t-md']")
-    outerhtml = element.get_attribute("outerHTML")
-    soup = BeautifulSoup(outerhtml, "lxml")
-    
-    for iframe in soup.find_all('iframe'):
-        frames = iframe.extract()
-        source = str(frames.get('src'))
+        #element = driver.find_element_by_xpath("//div[@class='tiers m-b-md']")
         
-        if "youtube" in source:
-            url_video = source.split("/")
-            yield from _set_tempo_video(bot, url_video[len(url_video)-1])
+        element = driver.find_element_by_xpath("//div[@class='tiers m-b-md pos-rel']")
+        outerhtml = element.get_attribute("outerHTML")
+        soup = BeautifulSoup(outerhtml, "lxml")
+        h4 = soup.find_all('h4')
             
-    driver.quit()
+        #tierS = soup.find('div',{'id': 'tierS'})
+        tier1 = soup.find('div',{'id': 'tier1'})
+        tier2 = soup.find('div',{'id': 'tier2'})
+        tier3 = soup.find('div',{'id': 'tier3'})
+        tier4 = soup.find('div',{'id': 'tier4'})
+        tier5 = soup.find('div',{'id': 'tier5'})
+        tier6 = soup.find('div',{'id': 'tier6'})
+        
+        #tSh4 = tierS.find_all('h4')
+        t1h4 = tier1.find_all('h4')
+        t2h4 = tier2.find_all('h4')
+        t3h4 = tier3.find_all('h4')
+        t4h4 = tier4.find_all('h4')
+        t5h4 = tier5.find_all('h4')
+        t6h4 = tier6.find_all('h4')
+              
+        allDecks = []
+        
+        i = 1
+        for deck in h4:
+            allDecks.append(str(i) + ": " + deck.text)
+            i += 1
+        
+        bot.conversation_memory_set(globalMemoryTempo, 'decks', allDecks)
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_all', str(len(h4)))
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_tS', str(len(t1h4)))
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_t1', str(len(t2h4)))
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_t2', str(len(t3h4)))
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_t3', str(len(t4h4)))
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_t4', str(len(t5h4)))
+        bot.conversation_memory_set(globalMemoryTempo, 'decks_t5', str(len(t6h4)))
+
+        element = driver.find_element_by_xpath("//div[@class='m-t-md']")
+        outerhtml = element.get_attribute("outerHTML")
+        soup = BeautifulSoup(outerhtml, "lxml")
+        
+        for iframe in soup.find_all('iframe'):
+            frames = iframe.extract()
+            source = str(frames.get('src'))
+            
+            if "youtube" in source:
+                url_video = source.split("/")
+                yield from _set_tempo_video(bot, url_video[len(url_video)-1])
+        
+        messageTime = datetime.now().strftime('%H:%M')
+        print("_tempo_update_data about to driver.quit(): " + messageTime)
+
+    finally:
+        driver.quit()
+        
+    #driver.quit()
     
     #end _tempo_update_data
 

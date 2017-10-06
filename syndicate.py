@@ -78,17 +78,17 @@ def _reaper_check(bot):
             if subs == "Empty":
                 subs = []
                 
-            for conv_id in subs:
-                #heartbeat
-                #yield from bot.coro_send_message(conv_id, messageTime)
-                if new_report != old_report:
-                    #post link to chat       
+            if new_report != old_report:
+                #post link to chat       
+                for conv_id in subs:                    
                     if new_report != 0:
                         messageNew = "New Syndicate Reaper Report found: "
                         report_url = "http://www.vicioussyndicate.com/vs-data-reaper-report-"
                         report_url += str(new_report)
                         yield from bot.coro_send_message(conv_id, messageNew)
                         yield from bot.coro_send_message(conv_id, report_url)
+        
+        yield from _set_reaper_date_checked(bot)
                     
     #end _reaper_check
 
@@ -97,12 +97,22 @@ def reaper(bot, event, *args):
     """
     Returns meta information from http://www.vicioussyndicate.com/
     \nUsage: /h reaper <command>
-    \nCommand Options: data, link, distribution, frequency, winrates, subscribe, unsubscribe
+    \nCommand Options: data, link, subscribe, unsubscribe
     \nAdmin Options: update, cleanup
     """
     
+    #\nCommand Options: data, link, distribution, frequency, winrates, subscribe, unsubscribe, allthethings
+    #\nAdmin Options: update, cleanup
+    
+    # not working: distribution, frequency, winrates
+    
+    
     messageInvalid = "Invalid Option. "
-    messageUsage = "Usage: "
+    
+    #help
+    messageUsage = "Usage: /h reaper <command> \n "
+    messageUsage += "Command Options: data, link, subscribe, unsubscribe \n "
+    messageUsage += "Admin Options: update, cleanup"
     
     if len(args) > 0:
         
@@ -378,7 +388,7 @@ def _set_reaper_notification(bot, event, param):
         
     if param.lower() == "unsub":
         messageSub = "This hangout will no longer receive notifications of new Data Reaper Reports. \n To subscribe: \n/h reaper subscribe"
-        _set_treaper_subscriptions(bot, "remove", event.conv_id)
+        _set_reaper_subscriptions(bot, "remove", event.conv_id)
         yield from bot.coro_send_message(event.conv_id, messageSub )
 
 @asyncio.coroutine
@@ -390,7 +400,14 @@ def _set_reaper_date_checked(bot):
     
 @asyncio.coroutine
 def _set_reaper_latest(bot, param):
+    
     bot.conversation_memory_set(globalMemoryReaper, 'latest', param)
+    
+    mydate = datetime.now().strftime('%Y-%m-%d')
+    mytime = datetime.now().strftime('%H:%M')
+    bot.conversation_memory_set(globalMemoryReaper, 'latest_date_found_on', mydate)
+    bot.conversation_memory_set(globalMemoryReaper, 'latest_time_found_on', mytime)
+    
     yield from _set_reaper_date_checked(bot)
     
 @asyncio.coroutine
