@@ -93,10 +93,10 @@ def setapikey(bot, event, *args):
 def card(bot, event, *args):
     """
     Returns Hearthstone card information from http://hearthstoneapi.com/
-    Usage: /h card <name>
+    Usage: /h <number> card <name>
     Example: /h card leeroy jenkins
+    Example: /h card 2 ysera
     """    
-    #Example: /h card 2 ysera
     messageUsage = "Usage: /h card <name> \n Example: /h card leeroy jenkins"
     
     string_match = ""; 
@@ -106,10 +106,17 @@ def card(bot, event, *args):
             x += 1
     
         cards = _get_card_info(bot, args)
+            
+        #if args[0].isdigit():
+        #    cards = _get_card_info_pos(bot, args, args[0])
+        #else: 
+        #    cards = _get_card_info(bot, args)
         
         message0 = "Sorry! Sorry. I'm sorry, sorry. I didn't find anything."
         message1 = "Here's what I found:"
-        message2 = "I found multiple matches. Can you be more specific?" 
+        message2 = "I found multiple matches. Can you be more specific?\n" 
+        message2 += "or try: .card <#> search\n"
+        message2 += "example: .card 2 search"
         #message5 = "More than 5 matches. You'll need to be more specific."
         message10 = "More than 10 matches. You'll need to be more specific."
         messageTry = "I am going to try and print this one for you: "
@@ -130,13 +137,28 @@ def card(bot, event, *args):
             #elif 2 <= len(cards) <= 5:
             elif 2 <= len(cards) <= 10:
                 yield from bot.coro_send_message(event.conv_id, message2)
+                match = False 
+                
                 for x in range(0, len(cards) ):
-                    yield from bot.coro_send_message(event.conv_id, str(cards[x]['name']) )
-                    if str(cards[x]['name']).lower() == string_match.lower():
-                        matchPrint = messageTry + cards[x]['name']
-                        yield from bot.coro_send_message(event.conv_id, matchPrint)
-                        yield from _print_card(bot, event, cards, x)
+                    yield from bot.coro_send_message(event.conv_id, str(x+1) + ": " + str(cards[x]['name']) )
+                    
+                    first_string = args[0].partition(" ")[0]
+                    
+                    if first_string[0].isdigit() and first_string[0] == str(x+1):
+                        match = True
+                        matchx = x
+                    
+                    elif str(cards[x]['name']).lower() == string_match.lower():
+                        match = True
+                        matchx = x
+                        
                     x += 1
+                 
+                if match:
+                    matchPrint = messageTry + cards[matchx]['name']
+                    yield from bot.coro_send_message(event.conv_id, matchPrint)
+                    yield from _print_card(bot, event, cards, matchx)
+                    
             else:
                 #yield from bot.coro_send_message(event.conv_id, message5)
                 yield from bot.coro_send_message(event.conv_id, message10)
@@ -184,11 +206,14 @@ def _get_card_info(bot, params):
     
         if len(params) > 0:
             for x in range(0, len(params) ):
-                hearthstone_api_url += str(params[x])
+                first_string = params[0].partition(" ")[0]
+                if first_string[0].isdigit():
+                    hearthstone_api_url += params[0][2:]
+                else:     
+                    hearthstone_api_url += str(params[x])
                 y = len(params) - 1
                 if x < y:
                     hearthstone_api_url += str("%20")
-                #print(str(x) + ": " + params[x]) 
                 x += 1
         else:
             return ""
