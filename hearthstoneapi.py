@@ -96,6 +96,7 @@ def card(bot, event, *args):
     Usage: /h card <name>
     Example: /h card leeroy jenkins
     """    
+    #Example: /h card 2 ysera
     messageUsage = "Usage: /h card <name> \n Example: /h card leeroy jenkins"
     
     string_match = ""; 
@@ -109,8 +110,9 @@ def card(bot, event, *args):
         message0 = "Sorry! Sorry. I'm sorry, sorry. I didn't find anything."
         message1 = "Here's what I found:"
         message2 = "I found multiple matches. Can you be more specific?" 
-        message5 = "More than 5 matches. You'll need to be more specific."
+        #message5 = "More than 5 matches. You'll need to be more specific."
         message10 = "More than 10 matches. You'll need to be more specific."
+        messageTry = "I am going to try and print this one for you: "
         
         context = {
             "parser": False,
@@ -131,6 +133,8 @@ def card(bot, event, *args):
                 for x in range(0, len(cards) ):
                     yield from bot.coro_send_message(event.conv_id, str(cards[x]['name']) )
                     if str(cards[x]['name']).lower() == string_match.lower():
+                        matchPrint = messageTry + cards[x]['name']
+                        yield from bot.coro_send_message(event.conv_id, matchPrint)
                         yield from _print_card(bot, event, cards, x)
                     x += 1
             else:
@@ -198,9 +202,15 @@ def _get_card_info(bot, params):
             data = response.json()
             print( str( data ) )
             
-            # remove any cards in the debug set
             for x in range( len(data), 0, -1):
+                
+                # remove any cards in the debug set
                 if str(data[x-1]['cardSet']) == "Debug" :
+                    #print("deleting: " + str(data[x-1]) )
+                    del data[x-1]
+                
+                # remove all cards without images
+                if "img" not in str(data[x-1]):
                     #print("deleting: " + str(data[x-1]) )
                     del data[x-1]
                 
