@@ -144,6 +144,9 @@ def card(bot, event, *args):
                     
                     first_string = args[0].partition(" ")[0]
                     
+                    #print("first: " + str(first_string[0]))
+                    #print("second: " + str(first_string[1]))
+                    
                     if first_string[0].isdigit() and first_string[0] == str(x+1):
                         match = True
                         matchx = x
@@ -205,18 +208,29 @@ def _get_card_info(bot, params):
         api_key = bot.conversation_memory_get(globalMemoryHearth, 'hearthstone_api_key')
     
         if len(params) > 0:
-            for x in range(0, len(params) ):
-                first_string = params[0].partition(" ")[0]
-                if first_string[0].isdigit():
-                    hearthstone_api_url += params[0][2:]
-                else:     
-                    hearthstone_api_url += str(params[x])
-                y = len(params) - 1
+                
+            first_string = params[0].partition(" ")[0]
+                
+            r = 0
+            if first_string[0].isdigit():
+                r = 1
+                hearthstone_api_url += params[0][2:]
+            #else:     
+            #    hearthstone_api_url += str(params[x])
+                
+            y = len(params) - 1
+            
+            for x in range(r, len(params) ):
+                
+                hearthstone_api_url += str(params[x])
+                
                 if x < y:
                     hearthstone_api_url += str("%20")
                 x += 1
         else:
             return ""
+        
+        #print("url: " + str(hearthstone_api_url) )
         
         response = requests.get(hearthstone_api_url,
             headers={ "X-Mashape-Key": api_key }
